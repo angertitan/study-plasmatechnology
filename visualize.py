@@ -4,17 +4,22 @@ from os import listdir
 from os.path import join, splitext
 
 
-def original_to_chart(data_array, name, ylabel, figsize=(1200, 800)):
+def plot_it(x, y=None, invert_xaxis=False, name='', ylabel='y', xlabel='x', figsize=(1200, 800)):
 
     print("creating figure for {}".format(name))
 
     figsize_inch = (figsize[0] / 96, figsize[1] / 96)
 
     fig = plt.figure(figsize=figsize_inch)
-    plt.xlabel("Wellenzahl", fontsize=12, fontweight="bold")
+    plt.xlabel(xlabel, fontsize=12, fontweight="bold")
     plt.ylabel(ylabel, fontsize=12, fontweight="bold")
-    plt.plot(data_array[0], data_array[1])
-    plt.gca().invert_xaxis()
+    if not y:
+        plt.plot(x)
+    else:
+        plt.plot(x, y)
+    if invert_xaxis:
+        plt.gca().invert_xaxis()
+        
     # plt.ylim(0, 1)
     fig.tight_layout()
 
@@ -33,14 +38,17 @@ def visualize_many(dirname):
             label = "Quotient"
 
         data_array = load_data(join(dirname, filename))
-        original_to_chart(data_array, filename, label)
+        plot_it(data_array[0], data_array[1], name=filename, ylabel=label)
 
 
-def load_data(path):
+def load_data(path, lab=1):
     file = open(path)
     file_string = file.read()
 
     data_array = json.loads(file_string)
+
+    if lab == 2:
+        return data_array
 
     x_values = []
     y_values = []
@@ -51,31 +59,22 @@ def load_data(path):
     return [x_values, y_values]
 
 
-def multichart(data1, data2, name):
+def multichart(*args, lab=2, invert_xaxis=False, name='', ylabel='', xlabel='' ):
     fig = plt.figure()
     
-    plt.xlabel("Wellenzahl", fontsize=12, fontweight="bold")
-    plt.ylabel("Quotient", fontsize=12, fontweight="bold")
+    plt.xlabel(xlabel, fontsize=12, fontweight="bold")
+    plt.ylabel(ylabel, fontsize=12, fontweight="bold")
     
-    plt.plot(data1[0], data1[1])
-    plt.gca().invert_xaxis()
-    
-    plt.plot(data2[0], data2[1], 'g')
-    #plt.gca().invert_xaxis()
-    
+    for d in args:
+        if lab == 2:
+            plt.plot(d)
+        else:
+            plt.plot(d[0], d[1])
+        
+        if invert_xaxis:
+            plt.gca().invert_xaxis()
+        
     fig.tight_layout()
     
     plt.savefig("./charts/" + name + ".png", format="png")
-
-#visualize_many("data/parsed")
-data1 = load_data('data/parsed/Gruppe3.15.json')
-data2 = load_data('data/parsed/Gruppe3.16.json')
-
-data3 = load_data('data/parsed/Gruppe3.4.json')
-data4 = load_data('data/parsed/Gruppe3.12.json')
-
-
-multichart(data2, data1, '3.15_3.16')
-multichart(data4, data3, '3.4_3.12')
-
 
